@@ -27,21 +27,26 @@ class SpamBot extends Bot {
     }
 
     loopSpam(socket) {
-        (async function loop(socket, apiServer, userId) {
-            const {data} = await axios.get(`${apiServer}/chats/users/${userId}`);
-            const rand = Math.round(Math.random() * (120000 - 10000)) + 10000;
-            setTimeout((chats, socket, userId) => {
+        (async function loop(socket, apiServer, user) {
+            const {data} = await axios.get(`${apiServer}/chats/users/${user.id}`);
+            const rand = Math.round(Math.random() * (12000 - 1000)) + 1000;
+
+            const sendSpam = function (chats, message = "Spam message") {
                 for (const chat of chats) {
                     socket.emit("message", {
-                        text: "Spam message",
-                        senderId: userId,
+                        text: message,
+                        senderId: user.id,
                         roomId: chat.id,
                     })
                 }
-                loop(socket, apiServer, userId);
-            }, rand, data.data, socket, userId);
+            };
 
-        }(socket, this.apiServer, this.user.id));
+            setTimeout((chats, socket, user) => {
+                sendSpam(chats);
+                loop(socket, apiServer, user);
+            }, rand, data.data, socket, user);
+
+        }(socket, this.apiServer, this.user));
     }
 }
 
