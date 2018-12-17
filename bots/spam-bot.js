@@ -1,17 +1,17 @@
 const io = require('socket.io-client');
 const axios = require('axios');
+const Bot = require('./bot').Bot;
 
-class SpamBot {
-    constructor() {
-        this.user = undefined;
-        this.apiServer = 'http://localhost:3000';
+class SpamBot extends Bot {
+    constructor(name) {
+        super(name);
     }
 
     connect() {
-        const socket = io(this.apiServer, {
+        const socket = io(this.wsServer, {
             query: {
-                type: 'bot',
-                name: "Spam bot"
+                type: this.type,
+                name: this.name
             }
         });
 
@@ -19,27 +19,29 @@ class SpamBot {
             this.user = data.user;
 
             try {
-                const {data} = await axios.get(`${this.apiServer}/api/chats/users/${this.user.id}`);
-
-                (function loop(user, chats) {
-                    const rand = Math.round(Math.random() * (3000 - 500)) + 500;
-
-                    setTimeout((chats) => {
-                        for (const chat of chats) {
-                            socket.emit("message", {
-                                text: "Spam message",
-                                senderId: user.id,
-                                roomId: chat.id,
-                            })
-                        }
-                        loop(rand, chats);
-                    }, rand, chats);
-
-                }(this.user, data.data));
+                this.loopSpam(socket);
             } catch (e) {
                 console.error(e);
             }
         });
+    }
+
+    loopSpam(socket) {
+        (async function loop(socket, apiServer, userId) {
+            const {data} = await axios.get(`${apiServer}/chats/users/${userId}`);
+            const rand = Math.round(Math.random() * (120000 - 10000)) + 10000;
+            setTimeout((chats, socket, userId) => {
+                for (const chat of chats) {
+                    socket.emit("message", {
+                        text: "Spam message",
+                        senderId: userId,
+                        roomId: chat.id,
+                    })
+                }
+                loop(socket, apiServer, userId);
+            }, rand, data.data, socket, userId);
+
+        }(socket, this.apiServer, this.user.id));
     }
 }
 

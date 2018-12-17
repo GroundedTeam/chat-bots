@@ -1,11 +1,16 @@
 const io = require('socket.io-client');
+const Bot = require('./bot').Bot;
 
-class IgnoreBot {
+class IgnoreBot extends Bot {
+    constructor(name) {
+        super(name);
+    }
+
     connect() {
-        const socket = io('http://localhost:3000', {
+        const socket = io(this.wsServer, {
             query: {
-                type: 'bot',
-                name: "Ignore bot"
+                type: this.type,
+                name: this.name
             }
         });
     }

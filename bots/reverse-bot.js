@@ -1,20 +1,21 @@
 const io = require('socket.io-client');
+const Bot = require('./bot').Bot;
 
-class ReverseBot {
-    constructor() {
-        this.user = {};
+class ReverseBot extends Bot {
+    constructor(name) {
+        super(name);
     }
 
     connect() {
-        const socket = io('http://localhost:3000', {
+        const socket = io(this.wsServer, {
             query: {
-                type: 'bot',
-                name: "Reverse bot"
+                type: this.type,
+                name: this.name,
             }
         });
 
         socket.on('register', data => {
-            this.user.id = data.user.id;
+            this.user = data.user;
         });
 
         socket.on('new-message', data => {
